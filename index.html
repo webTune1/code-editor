@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web Studio — Code + Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --bg2: #0b0d11;
+      --panel: #151922;
+      --panel2: #0f141c;
+      --accent: #3b82f6;
+      --text: #e5e7eb;
+      --muted: #8b95a7;
+      --border: #232a36;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .topbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #0f141c 0%, #0c1118 100%);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .brand { font-weight: 700; letter-spacing: .3px; color: #eaf2ff; }
+    .toolbar { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    button, .toggle {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border);
+      padding: 8px 12px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    button:hover { border-color: #2c3544; background: #171d27; }
+    .toggle input { margin-right: 6px; }
+    .tabs {
+      display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--panel2);
+    }
+    .tab {
+      padding: 6px 10px; border-radius: 8px; cursor: pointer; color: var(--muted);
+      border: 1px solid transparent;
+    }
+    .tab.active {
+      color: var(--text); background: #1a2230; border-color: #2a3344;
+    }
+    .workbench {
+      position: absolute; top: 58px; bottom: 0; left: 0; right: 0; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 0; min-height: 0;
+    }
+    .pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .editor-pane { background: var(--panel2); border-right: 1px solid var(--border); }
+    .preview-pane { background: var(--panel2); }
+    .splitter-v {
+      width: 6px; cursor: col-resize; background: #10151d; border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+    }
+    .subsplit {
+      display: grid; grid-template-rows: 1fr 180px; min-height: 0;
+    }
+    .splitter-h {
+      height: 6px; cursor: row-resize; background: #10151d; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--panel);
+    }
+    .section-header .title { color: var(--muted); font-weight: 600; }
+    #preview {
+      width: 100%; height: 100%; border: 0; background: #0b0e14;
+    }
+    #console {
+      padding: 8px 10px; overflow: auto; background: #0b0e14; color: #cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+    .log { color: #cbd5e1; }
+    .warn { color: var(--warn); }
+    .error { color: var(--danger); }
+    .info { color: #60a5fa; }
+    .chip { font-size: 12px; padding: 2px 6px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); }
+    .status { display: inline-flex; align-items: center; gap: 6px; }
+    .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #0b0e14; border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; color: #aab4c3; }
+    @media (max-width: 900px) {
+      .workbench { grid-template-columns: 1fr; grid-template-rows: 52% 6px 48%; }
+      .splitter-v { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Web Studio</div>
+    <div class="chip">HTML • CSS • JS</div>
+    <div class="toolbar">
+      <button id="runBtn" title="Run (Ctrl/⌘ + Enter)">▶ Run</button>
+      <label class="toggle"><input type="checkbox" id="autoRun" checked /> Auto‑run</label>
+      <button id="resetBtn" title="Reset to starter">↺ Reset</button>
+      <span class="status"><span class="dot" id="statusDot"></span> <span id="statusText">Ready</span></span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-lang="html">index.html</div>
+    <div class="tab" data-lang="css">styles.css</div>
+    <div class="tab" data-lang="js">script.js</div>
+    <span style="margin-left:auto;color:#8b95a7">Run: <span class="kbd">Ctrl/⌘</span> + <span class="kbd">Enter</span></span>
+  </div>
+
+  <div class="workbench" id="workbench">
+    <div class="pane editor-pane">
+      <div id="editor" style="width:100%;height:100%"></div>
+    </div>
+    <div class="splitter-v" id="splitV"></div>
+    <div class="pane preview-pane">
+      <div class="subsplit">
+        <div>
+          <div class="section-header">
+            <div class="title">Preview</div>
+            <div class="chip">sandboxed</div>
+          </div>
+          <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+        <div class="splitter-h" id="splitH"></div>
+        <div>
+          <div class="section-header">
+            <div class="title">Console</div>
+            <div>
+              <button id="clearConsole">Clear</button>
+            </div>
+          </div>
+          <div id="console">Console output will appear here…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monaco loader from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs/loader.min.js"></script>
+  <script>
+    // Layout: vertical and horizontal splitters
+    const workbench = document.getElementById('workbench');
+    const editorPane = document.querySelector('.editor-pane');
+    const previewPane = document.querySelector('.preview-pane');
+    const splitV = document.getElementById('splitV');
+    const splitH = document.getElementById('splitH');
+    const subsplit = document.querySelector('.subsplit');
+
+    function initVSplit() {
+      let dragging = false;
+      splitV.addEventListener('mousedown', () => dragging = true);
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const total = workbench.clientWidth;
+        const left = Math.min(Math.max(e.clientX, 180), total - 180);
+        const leftPct = (left / total) * 100;
+        workbench.style.gridTemplateColumns = leftPct + '% 6px ' + (100 - leftPct) + '%';
+        if (window.editor) editor.layout();
+      });
+      window.addEventListener('mouseup', () => dragging = false);
+    }
+    function initHSplit() {
+      let dragging = false;
+      splitH.addEventListener('mousedown', () => dragging = true);
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect = previewPane.getBoundingClientRect();
+        const y = Math.min(Math.max(e.clientY - rect.top, 120), rect.height - 120);
+        const topPct = (y / rect.height) * 100;
+        subsplit.style.gridTemplateRows = topPct + '% 6px ' + (100 - topPct) + '%';
+      });
+      window.addEventListener('mouseup', () => dragging = false);
+    }
+    initVSplit(); initHSplit();
+
+    // Starter code and persistence
+    const defaultHTML = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hello Web Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <h1>Hello 👋</h1>
+    <p>Edit HTML, CSS, and JS — see it live on the right.</p>
+    <button id="btn">Click me</button>
+  </body>
+</html>`;
+    const defaultCSS = `body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 24px; }
+h1 { color: #3b82f6; }
+button { padding: 10px 16px; border-radius: 8px; border: none; background:#1f2937; color: #e5e7eb; }
+button:hover { background:#111827; }`;
+    const defaultJS = `console.log("Welcome to Web Studio!");
+const btn = document.getElementById("btn");
+btn?.addEventListener("click", () => {
+  console.log("Clicked!");
+  alert("Button clicked 🎉");
+});`;
+
+    function loadState() {
+      return {
+        html: localStorage.getItem('ws_html') ?? defaultHTML,
+        css: localStorage.getItem('ws_css') ?? defaultCSS,
+        js: localStorage.getItem('ws_js') ?? defaultJS
+      };
+    }
+    function saveState({html, css, js}) {
+      localStorage.setItem('ws_html', html);
+      localStorage.setItem('ws_css', css);
+      localStorage.setItem('ws_js', js);
+    }
+
+    // Monaco setup
+    let editor, models = {};
+    const tabs = document.querySelectorAll('.tab');
+
+    window.require.config({
+      paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs' }
+    });
+
+    window.require(['vs/editor/editor.main'], function () {
+      const state = loadState();
+      models.html = monaco.editor.createModel(state.html, 'html', monaco.Uri.parse('inmemory://model/index.html'));
+      models.css  = monaco.editor.createModel(state.css,  'css',  monaco.Uri.parse('inmemory://model/styles.css'));
+      models.js   = monaco.editor.createModel(state.js,   'javascript', monaco.Uri.parse('inmemory://model/script.js'));
+
+      editor = monaco.editor.create(document.getElementById('editor'), {
+        model: models.html,
+        theme: 'vs-dark',
+        fontSize: 14,
+        minimap: { enabled: true },
+        automaticLayout: true,
+        wordWrap: 'on',
+        smoothScrolling: true,
+        scrollBeyondLastLine: false
+      });
+
+      tabs.forEach(tab => tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const lang = tab.dataset.lang;
+        editor.setModel(models[lang]);
+      }));
+
+      // Autosave + autorun
+      const debounced = (fn, ms = 400) => {
+        let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+      };
+      const handleChange = debounced(() => {
+        const current = {
+          html: models.html.getValue(),
+          css: models.css.getValue(),
+          js: models.js.getValue()
+        };
+        saveState(current);
+        if (document.getElementById('autoRun').checked) run(current);
+      }, 400);
+
+      Object.values(models).forEach(m => m.onDidChangeContent(handleChange));
+
+      // First run
+      run(state);
+    });
+
+    // Build preview document and wire console
+    const iframe = document.getElementById('preview');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const consoleEl = document.getElementById('console');
+
+    function setStatus(text, ok = true) {
+      statusDot.style.background = ok ? 'var(--success)' : 'var(--danger)';
+      statusText.textContent = text;
+    }
+
+    function run(src) {
+      setStatus('Running…', true);
+      const { html, css, js } = src;
+      const doc = `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>${css}</style>
+</head>
+<body>
+${html}
+<script>
+(function(){
+  // Forward console to parent
+  const send = (type, args) => {
+    try { parent.postMessage({ __ws_console: true, type, args: args.map(a => serialize(a)) }, '*'); } catch(e){}
+  };
+  function serialize(v){
+    try {
+      if (v instanceof Error) return { __error: true, name: v.name, message: v.message, stack: v.stack };
+      return JSON.parse(JSON.stringify(v));
+    } catch {
+      return String(v);
+    }
+  }
+  ['log','warn','error','info'].forEach(k => {
+    const orig = console[k].bind(console);
+    console[k] = function(...args){ send(k, args); orig(...args); };
+  });
+  window.addEventListener('error', function(e){
+    send('error', [String(e.message) + " @ " + (e.filename||'') + ":" + (e.lineno||'')]);
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    send('error', ["Unhandled Promise rejection: " + (e.reason && e.reason.message || e.reason)]);
+  });
+})();
+<\/script>
+<script>
+try {
+${js}
+} catch (e) {
+  console.error(e);
+}
+<\/script>
+</body>
+</html>`;
+      iframe.srcdoc = doc;
+      clearConsole();
+      setStatus('Ready', true);
+    }
+
+    // Receive console messages
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!data || !data.__ws_console) return;
+      data.args.forEach(a => appendLog(data.type, a));
+    });
+
+    function appendLog(type, payload) {
+      const line = document.createElement('div');
+      line.className = type === 'error' ? 'error' : type === 'warn' ? 'warn' : type === 'info' ? 'info' : 'log';
+      let text = payload;
+      if (payload && typeof payload === 'object') {
+        if (payload.__error) text = `${payload.name}: ${payload.message}\n${payload.stack||''}`;
+        else text = JSON.stringify(payload, null, 2);
+      }
+      line.textContent = `[${type}] ${text}`;
+      consoleEl.appendChild(line);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+    function clearConsole(){ consoleEl.textContent = ''; }
+    document.getElementById('clearConsole').addEventListener('click', clearConsole);
+
+    // Controls
+    document.getElementById('runBtn').addEventListener('click', () => {
+      const current = {
+        html: models.html.getValue(),
+        css: models.css.getValue(),
+        js: models.js.getValue()
+      };
+      run(current);
+    });
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset to starter template?')) return;
+      models.html.setValue(defaultHTML);
+      models.css.setValue(defaultCSS);
+      models.js.setValue(defaultJS);
+    });
+    // Keyboard: Ctrl/Cmd + Enter
+    window.addEventListener('keydown', (e) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('runBtn').click();
+      }
+    });
+  </script>
+</body>
+</html>
