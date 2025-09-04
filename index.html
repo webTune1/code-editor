@@ -2,397 +2,148 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Web Studio Pro — VS Code-like browser IDE</title>
+<title>Web Studio Pro — Editor + Preview</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
   :root {
     --bg:#0f1115; --bg2:#0c1118; --panel:#151922; --panel2:#0f141c;
     --accent:#3b82f6; --text:#e5e7eb; --muted:#94a3b8; --border:#232a36;
-    --success:#22c55e; --danger:#ef4444; --warn:#f59e0b;
   }
   [data-theme="light"] {
     --bg:#f6f7fb; --bg2:#ffffff; --panel:#ffffff; --panel2:#f6f8fc;
     --accent:#2563eb; --text:#0f172a; --muted:#475569; --border:#e2e8f0;
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+    background:var(--bg); color:var(--text);
+    font:14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
   }
-  /* Top bar */
   .topbar {
     display:flex; align-items:center; gap:10px; padding:10px 12px;
     border-bottom:1px solid var(--border);
     background:linear-gradient(180deg, var(--panel2), var(--bg));
-    position:sticky; top:0; z-index:10;
   }
-  .brand { font-weight:700; letter-spacing:.2px; }
+  .brand { font-weight:700; }
   .toolbar { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
   button, .toggle, .inputlike {
     background:var(--panel); color:var(--text); border:1px solid var(--border);
-    padding:7px 10px; border-radius:8px; cursor:pointer; user-select:none;
-    transition: background .15s ease, border-color .15s ease;
+    padding:7px 10px; border-radius:8px; cursor:pointer;
   }
-  button:hover { border-color:#2c3544; background: rgba(59,130,246,.08); }
-  .toggle { display:inline-flex; align-items:center; gap:6px; }
-  .status { display:inline-flex; align-items:center; gap:6px; }
-  .dot { width:8px; height:8px; border-radius:50%; background:var(--success); display:inline-block; }
-  .kbd { font-family: ui-monospace, Menlo, Consolas, monospace; background:var(--bg2);
-    border:1px solid var(--border); padding:1px 6px; border-radius:6px; color:var(--muted); }
-  .badge { font-size:12px; padding:2px 6px; border:1px solid var(--border); border-radius:999px; color:var(--muted); }
-  .inputlike { display:inline-flex; align-items:center; gap:6px; }
-
-  /* Layout using flex for smooth resizing */
-  .layout { position:absolute; top:52px; bottom:0; left:0; right:0; display:flex; min-height:0; overflow:hidden; }
+  button:hover { border-color:#2c3544; background:rgba(59,130,246,.08); }
+  .layout { position:absolute; top:52px; bottom:0; left:0; right:0; display:flex; min-height:0; }
   .sidebar {
     width:260px; min-width:180px; max-width:520px;
     display:flex; flex-direction:column; background:var(--panel2);
     border-right:1px solid var(--border);
-    transition: width .15s ease, transform .2s ease;
+    transition:width .15s ease;
   }
-  .sidebar.hidden { width:0; border-right:none; }
   .splitter-v { width:6px; cursor:col-resize; background:var(--bg2); border-left:1px solid var(--border); border-right:1px solid var(--border); }
   .center { flex:1; display:flex; min-width:0; }
   .editor-pane, .right-pane { display:flex; flex-direction:column; min-width:0; background:var(--panel2); }
   .editor-pane { flex:1; border-right:1px solid var(--border); }
   .right-pane { width:50%; min-width:280px; }
-  .splitter-v.right { width:6px; cursor:col-resize; background:var(--bg2); border-left:1px solid var(--border); border-right:1px solid var(--border); }
-
   .section-header {
     display:flex; align-items:center; justify-content:space-between; padding:8px 10px;
     border-bottom:1px solid var(--border); background:var(--panel);
   }
-  .title { font-weight:600; color:var(--muted); }
-  .filebar { padding:8px; display:flex; gap:6px; border-bottom:1px solid var(--border); }
   .files { flex:1; overflow:auto; padding:6px; }
-  .file {
-    padding:6px 8px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:6px;
-    transition: background .12s ease, border .12s ease;
-  }
-  .file:hover { background:rgba(59,130,246,.06); }
+  .file { padding:6px 8px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; }
   .file.active { background:rgba(59,130,246,.15); border:1px solid rgba(59,130,246,.35); }
-  .file .name { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-  .file .ext { color:var(--muted); font-size:12px; }
-  /* VS Code-like filename colors */
   .file[data-ext="html"] .name { color:#e34c26; }
   .file[data-ext="css"] .name { color:#563d7c; }
   .file[data-ext="js"] .name { color:#f1e05a; }
-  .file[data-ext="ts"] .name { color:#3178c6; }
-  .file[data-ext="json"] .name { color:#cbcb41; }
-  .file[data-ext="md"] .name { color:#083fa1; }
   .file[data-ext="py"] .name { color:#3572A5; }
-  .file[data-ext="c"] .name, .file[data-ext="h"] .name { color:#555; }
-  .file[data-ext="cpp"] .name, .file[data-ext="cxx"] .name, .file[data-ext="hpp"] .name { color:#f34b7d; }
-  .file[data-ext="xml"] .name, .file[data-ext="svg"] .name { color:#ff9900; }
-
   #editor { width:100%; height:100%; }
-
-  /* Right side splits (preview/console) */
-  .right-inner { display:flex; flex-direction:column; min-height:0; }
-  .right-splits { display:grid; grid-template-rows: 1fr 6px 240px; min-height:0; transition: grid-template-rows .15s ease; }
-  .right-splits.full-preview { grid-template-rows: 1fr 0 0 !important; }
-  .splitter-h { height:6px; cursor:row-resize; background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
-  #preview { width:100%; height:100%; border:0; background:var(--bg); }
-  #console { padding:8px 10px; overflow:auto; background:var(--bg); color:#cbd5e1; font-family: ui-monospace, Menlo, Consolas, monospace; white-space:pre-wrap; }
-  [data-theme="light"] #console { color:#0f172a; }
-  .log { color:#cbd5e1; } .warn { color:var(--warn); } .error { color:var(--danger); } .info { color:#60a5fa; }
-  .hidden { display:none !important; }
-
-  /* Mobile */
-  @media (max-width: 900px) {
+  .right-inner { flex:1; display:flex; flex-direction:column; }
+  #preview { flex:1; width:100%; border:0; background:var(--bg); }
+  @media (max-width:900px) {
     .layout { flex-direction:column; }
-    .sidebar {
-      position:fixed; top:52px; bottom:0; left:0; z-index:20;
-      width:80%; max-width:360px; box-shadow:0 10px 30px rgba(0,0,0,.35);
-      transform:translateX(-100%); border-right:1px solid var(--border);
-    }
+    .sidebar { position:fixed; top:52px; bottom:0; left:0; z-index:20; width:80%; max-width:360px; transform:translateX(-100%); }
     .sidebar.show { transform:translateX(0); }
     .splitter-v { display:none; }
     .center { flex-direction:column; }
-    .editor-pane { width:100%; height:50vh; border-right:none; border-bottom:1px solid var(--border); }
-    .right-pane { width:100%; height:50vh; }
+    .editor-pane { height:50vh; border-bottom:1px solid var(--border); }
+    .right-pane { height:50vh; width:100%; }
   }
 </style>
 </head>
 <body data-theme="dark">
   <div class="topbar">
-    <button id="sidebarToggle" title="Toggle Files">📁</button>
+    <button id="sidebarToggle">📁</button>
     <div class="brand">Web Studio Pro</div>
     <div class="inputlike">Project: <span id="projName" contenteditable="true">My Project</span></div>
     <div class="toolbar">
-      <button id="runBtn" title="Run (Ctrl/⌘ + Enter)">▶ Run</button>
-      <label class="toggle"><input type="checkbox" id="autoRun" checked /> Auto‑run</label>
-      <button id="toggleConsole" title="Show/Hide Console">🪵 Console</button>
-      <button id="themeToggle" title="Light/Dark">🌞/🌙</button>
-      <button id="resetBtn" title="Reset to starter">↺ Reset</button>
-      <span class="status"><span class="dot" id="statusDot"></span><span id="statusText">Ready</span></span>
+      <button id="runBtn">▶ Run</button>
+      <button id="themeToggle">🌞/🌙</button>
+      <button id="resetBtn">↺ Reset</button>
     </div>
   </div>
-
-  <div class="layout" id="layout">
-    <!-- Sidebar -->
+  <div class="layout">
     <aside class="sidebar" id="sidebar">
       <div class="section-header">
         <div class="title">Files</div>
-        <div class="badge" id="storageInfo">autosaved</div>
-      </div>
-      <div class="filebar">
-        <button id="addFile" title="New file">＋</button>
-        <button id="renameFile" title="Rename">✎</button>
-        <button id="deleteFile" title="Delete">🗑</button>
-        <button id="exportProj" title="Export project JSON">⬇ Export</button>
       </div>
       <div class="files" id="fileList"></div>
     </aside>
-
     <div class="splitter-v" id="splitLeft"></div>
-
-    <!-- Center -->
-    <div class="center" id="center">
-      <section class="editor-pane" id="editorPane">
-        <div class="section-header">
-          <div class="title">Editor</div>
-          <div>Run: <span class="kbd">Ctrl/⌘</span> + <span class="kbd">Enter</span></div>
-        </div>
+    <div class="center">
+      <section class="editor-pane">
+        <div class="section-header"><div class="title">Editor</div></div>
         <div id="editor"></div>
       </section>
-
-      <div class="splitter-v right" id="splitRight"></div>
-
+      <div class="splitter-v" id="splitRight"></div>
       <section class="right-pane">
         <div class="right-inner">
-          <div class="section-header">
-            <div class="title">Preview</div>
-            <div class="badge">sandboxed</div>
-          </div>
-          <div class="right-splits" id="rightSplits">
-            <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
-            <div class="splitter-h" id="splitH"></div>
-            <div id="consoleWrap">
-              <div class="section-header">
-                <div class="title">Console</div>
-                <div><button id="clearConsole">Clear</button></div>
-              </div>
-              <div id="console">Console output will appear here…</div>
-            </div>
-          </div>
+          <div class="section-header"><div class="title">Preview</div></div>
+          <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
       </section>
     </div>
   </div>
-  <!-- Monaco Editor (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs/loader.min.js"></script>
-
-  <!-- Pyodide loader (lazy) -->
   <script>
-    let pyodideReady = null;
-    async function ensurePyodide() {
-      if (!pyodideReady) {
-        const s = document.createElement('script');
-        s.src = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
-        document.head.appendChild(s);
-        pyodideReady = new Promise((resolve) => {
-          s.onload = async () => resolve(await loadPyodide());
-        });
-      }
-      return pyodideReady;
-    }
-  </script>
-
-  <script>
-    // Utils
     const byId = id => document.getElementById(id);
-    const extOf = name => (name.split('.').pop() || '').toLowerCase();
-    const langOfExt = (ext) => ({
-      html:'html', htm:'html', css:'css', scss:'scss', less:'less',
-      js:'javascript', mjs:'javascript', cjs:'javascript', ts:'typescript',
-      json:'json', md:'markdown', markdown:'markdown', yml:'yaml', yaml:'yaml',
-      xml:'xml', svg:'xml', py:'python',
-      c:'c', h:'c', cpp:'cpp', cxx:'cpp', hpp:'cpp',
-      sh:'shell', bash:'shell', sql:'sql', toml:'toml', ini:'ini', txt:'plaintext'
-    }[ext] || 'plaintext');
-
-    // Status
-    const statusDot = byId('statusDot'), statusText = byId('statusText');
-    const setStatus = (txt, ok = true) => { statusDot.style.background = ok ? 'var(--success)' : 'var(--danger)'; statusText.textContent = txt; };
-
-    // Project state
-    const LS_KEY = 'wsp_project_v3';
-    function defaultProject() {
-      return {
-        name: 'My Project',
-        files: {
-          'index.html': `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Web Studio Pro</title>
-</head>
-<body>
-  <h1>Hello 👋</h1>
-  <p>Edit HTML, CSS, JS — click Run or enable Auto‑run.</p>
-  <button id="btn">Click me</button>
-</body>
-</html>`,
-          'styles.css': `body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 24px; }
-h1 { color: #3b82f6; }
-button { padding: 10px 16px; border-radius: 8px; border: none; background:#1f2937; color: #e5e7eb; }
-button:hover { background:#111827; }`,
-          'script.js': `console.log("Welcome to Web Studio Pro!");
-const btn = document.getElementById("btn");
-btn?.addEventListener("click", () => {
-  console.log("Clicked!");
-  alert("Button clicked 🎉");
-});`
-        },
-        active: 'index.html',
-        theme: 'dark'
-      };
-    }
-    function loadProject() {
-      try {
-        const raw = localStorage.getItem(LS_KEY);
-        if (!raw) return defaultProject();
-        const data = JSON.parse(raw);
-        if (!data.files || Object.keys(data.files).length === 0) return defaultProject();
-        return data;
-      } catch { return defaultProject(); }
-    }
-    function saveProject() {
-      localStorage.setItem(LS_KEY, JSON.stringify(project));
-      byId('storageInfo').textContent = 'saved';
-      setTimeout(()=> byId('storageInfo').textContent = 'autosaved', 800);
-    }
-
-    let project = loadProject();
-
-    // Console
-    const consoleEl = byId('console');
-    function clearConsole(){ consoleEl.textContent = ''; }
-    byId('clearConsole').addEventListener('click', clearConsole);
-    function appendLog(type, payload) {
-      const line = document.createElement('div');
-      line.className = type === 'error' ? 'error' : type === 'warn' ? 'warn' : type === 'info' ? 'info' : 'log';
-      let text = payload;
-      if (payload && typeof payload === 'object') {
-        if (payload.__error) text = `${payload.name}: ${payload.message}\n${payload.stack||''}`;
-        else { try { text = JSON.stringify(payload, null, 2); } catch { text = String(payload); } }
-      }
-      line.textContent = `[${type}] ${text}`;
-      consoleEl.appendChild(line);
-      consoleEl.scrollTop = consoleEl.scrollHeight;
-    }
-    window.addEventListener('message', (e) => {
-      const d = e.data; if (!d) return;
-      if (d.__ws_console) d.args.forEach(a => appendLog(d.type, a));
-    });
-
-    // Files UI
-    const fileList = byId('fileList');
-    function refreshFilesUI() {
-      fileList.innerHTML = '';
-      Object.keys(project.files).forEach(name => {
-        const item = document.createElement('div');
-        item.className = 'file' + (project.active === name ? ' active' : '');
-        const ext = extOf(name);
-        item.dataset.ext = ext;
-        item.innerHTML = `<span class="name">${name}</span><span class="ext">${ext}</span>`;
-        item.addEventListener('click', () => openFile(name));
-        fileList.appendChild(item);
-      });
-      byId('projName').textContent = project.name;
-    }
-
-    byId('addFile').addEventListener('click', () => {
-      const name = prompt('New file name (e.g., new.html, app.js, styles.css, main.py):', 'untitled.txt');
-      if (!name) return;
-      if (project.files[name]) return alert('A file with that name already exists.');
-      project.files[name] = '';
-      saveProject();
-      ensureModel(name);
-      openFile(name);
-    });
-    byId('renameFile').addEventListener('click', () => {
-      const cur = project.active; if (!cur) return;
-      const name = prompt('Rename file to:', cur);
-      if (!name || name === cur) return;
-      if (project.files[name]) return alert('A file with that name already exists.');
-      project.files[name] = project.files[cur]; delete project.files[cur];
-      const model = models[cur];
-      if (model) {
-        const newModel = monaco.editor.createModel(model.getValue(), langOfExt(extOf(name)), monaco.Uri.parse('inmemory:///' + name));
-        bindModel(newModel, name);
-        editor.setModel(newModel);
-        models[name] = newModel;
-        model.dispose(); delete models[cur];
-      }
-      project.active = name; saveProject(); refreshFilesUI();
-    });
-    byId('deleteFile').addEventListener('click', () => {
-      const cur = project.active; if (!cur) return;
-      if (!confirm('Delete ' + cur + '?')) return;
-      delete project.files[cur];
-      if (models[cur]) { models[cur].dispose(); delete models[cur]; }
-      const next = Object.keys(project.files)[0] || null;
-      project.active = next;
-      if (next) editor.setModel(ensureModel(next));
-      saveProject(); refreshFilesUI(); run();
-    });
-    byId('exportProj').addEventListener('click', () => {
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
-      const a = document.createElement('a'); a.href = dataStr; a.download = (project.name || 'project') + '.wsp.json'; a.click();
-    });
-    byId('projName').addEventListener('input', debounce(() => {
-      project.name = byId('projName').textContent.trim() || 'My Project'; saveProject();
-    }, 400));
-
-    // Sidebar toggle / mobile drawer
-    const sidebar = byId('sidebar');
-    byId('sidebarToggle').addEventListener('click', () => {
-      if (window.matchMedia('(max-width: 900px)').matches) {
-        sidebar.classList.toggle('show');
-      } else {
-        sidebar.classList.toggle('hidden');
-      }
-    });
-
-    // Debounce helper
-    function debounce(fn, ms=400){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
-
-    // Monaco setup
+    const extOf = n => (n.split('.').pop()||'').toLowerCase();
+    const langOfExt = e => ({html:'html',css:'css',js:'javascript',py:'python'}[e]||'plaintext');
+    let project = { name:'My Project', files:{'index.html':'<h1>Hello</h1>'}, active:'index.html', theme:'dark' };
     let editor, models = {};
-    window.require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs' } });
-    window.require(['vs/editor/editor.main'], function () {
-      Object.keys(project.files).forEach(ensureModel);
-
-      editor = monaco.editor.create(byId('editor'), {
-        model: models[project.active] || ensureModel(project.active),
-        theme: project.theme === 'dark' ? 'vs-dark' : 'vs-light',
-        fontSize: 14,
-        minimap: { enabled: true },
-        automaticLayout: true,
-        wordWrap: 'on',
-        smoothScrolling: true,
-        scrollBeyondLastLine: false,
-        autoClosingBrackets: 'always',
-        autoClosingQuotes: 'always'
+    function refreshFilesUI(){
+      const fl = byId('fileList'); fl.innerHTML='';
+      Object.keys(project.files).forEach(name=>{
+        const d=document.createElement('div'); d.className='file'+(project.active===name?' active':'');
+        d.dataset.ext=extOf(name);
+        d.innerHTML=`<span class="name">${name}</span>`;
+        d.onclick=()=>openFile(name);
+        fl.appendChild(d);
       });
-
-      // Auto-closing HTML tags
-      monaco.languages.html.htmlDefaults.setOptions({ autoClosingTags: true });
-
-      // Emmet-like: "!" + Enter inserts boilerplate in HTML files
-      editor.addCommand(monaco.KeyCode.Enter, () => {
-        const model = editor.getModel();
-        if (model.getLanguageId() !== 'html') return;
+    }
+    function ensureModel(name){
+      if(models[name]) return models[name];
+      const m=monaco.editor.createModel(project.files[name]||'', langOfExt(extOf(name)), monaco.Uri.parse('inmemory:///'+name));
+      m.onDidChangeContent(()=>{ project.files[name]=m.getValue(); });
+      models[name]=m; return m;
+    }
+    function openFile(name){ project.active=name; editor.setModel(ensureModel(name)); refreshFilesUI(); }
+    window.require.config({ paths:{'vs':'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs'} });
+    window.require(['vs/editor/editor.main'], function(){
+      Object.keys(project.files).forEach(ensureModel);
+      editor=monaco.editor.create(byId('editor'),{
+        model:models[project.active], theme:'vs-dark', automaticLayout:true,
+        autoClosingBrackets:'always', autoClosingQuotes:'always'
+      });
+      monaco.languages.html.htmlDefaults.setOptions({ autoClosingTags:true });
+      // Enter fix with ! shortcut
+      editor.addCommand(monaco.KeyCode.Enter, ()=>{
+                const model = editor.getModel();
         const pos = editor.getPosition();
         const line = model.getLineContent(pos.lineNumber);
-        if (line.trim() === '!') {
-          const r = new monaco.Range(pos.lineNumber, 1, pos.lineNumber, line.length + 1);
+        // Only insert boilerplate if line is exactly "!" and cursor is at end
+        if (model.getLanguageId() === 'html' && line.trim() === '!' && pos.column === line.length + 1) {
+          const range = new monaco.Range(pos.lineNumber, 1, pos.lineNumber, line.length + 1);
           model.pushEditOperations([], [{
-            range: r, text: `<!DOCTYPE html>
+            range,
+            text: `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -402,65 +153,25 @@ btn?.addEventListener("click", () => {
 <body>
 
 </body>
-</html>`}], () => null);
+</html>`
+          }], () => null);
+        } else {
+          // Default Enter behaviour
+          editor.trigger('keyboard', 'type', { text: '\n' });
         }
       });
 
       refreshFilesUI();
-      run();
     });
-
-    function bindModel(model, name) {
-      model.onDidChangeContent(debounce(() => {
-        project.files[name] = model.getValue();
-        saveProject();
-        if (byId('autoRun').checked) run();
-      }, 500));
-    }
-    function ensureModel(name) {
-      if (models[name]) return models[name];
-      const value = project.files[name] ?? '';
-      const lang = langOfExt(extOf(name));
-      const uri = monaco.Uri.parse('inmemory:///' + name);
-      const model = monaco.editor.createModel(value, lang, uri);
-      models[name] = model;
-      bindModel(model, name);
-      return model;
-    }
-    function openFile(name) {
-      project.active = name;
-      editor.setModel(ensureModel(name));
-      refreshFilesUI();
-    }
-    // Preview + Python runner
+    // Run: update preview iframe
     const iframe = byId('preview');
-    async function run() {
-      setStatus('Running…', true);
-      clearConsole();
-
-      // Aggregate HTML/CSS/JS
+    function run() {
       const files = project.files;
       const htmlEntry = Object.keys(files).find(n => n.toLowerCase().endsWith('.html')) || 'index.html';
-      const allCSS = Object.keys(files).filter(n => n.toLowerCase().endsWith('.css')).map(n=>files[n]).join('\n\n');
-      const allJS  = Object.keys(files).filter(n => n.toLowerCase().endsWith('.js')).map(n=>files[n]).join('\n;\n');
-      const htmlBody = files[htmlEntry] || '<!doctype html><html><body><p>No HTML file found.</p></body></html>';
+      const allCSS = Object.keys(files).filter(n => n.endsWith('.css')).map(n => files[n]).join('\n');
+      const allJS  = Object.keys(files).filter(n => n.endsWith('.js')).map(n => files[n]).join('\n');
+      const htmlBody = files[htmlEntry] || '';
 
-      // If active file is .py, run via Pyodide (console only)
-      if (extOf(project.active) === 'py') {
-        try {
-          appendLog('info', 'Loading Python runtime (Pyodide)…');
-          const py = await ensurePyodide();
-          let out = '';
-          py.setStdout({ batched: (s)=> { out += s; } });
-          py.setStderr({ batched: (s)=> { out += s; } });
-          await py.runPythonAsync(project.files[project.active] || '');
-          if (out.trim()) appendLog('log', out);
-        } catch (e) {
-          appendLog('error', String(e));
-        }
-      }
-
-      // Build the preview document for web stack
       const doc = `
 <!doctype html>
 <html>
@@ -472,122 +183,73 @@ btn?.addEventListener("click", () => {
 <body>
 ${htmlBody}
 <script>
-(function(){
-  const send = (type, args) => { try { parent.postMessage({ __ws_console:true, type, args: args.map(a => serialize(a)) }, '*'); } catch(e){} };
-  function serialize(v){
-    try {
-      if (v instanceof Error) return { __error:true, name:v.name, message:v.message, stack:v.stack };
-      return JSON.parse(JSON.stringify(v));
-    } catch { return String(v); }
-  }
-  ['log','warn','error','info'].forEach(k => {
-    const orig = console[k].bind(console);
-    console[k] = function(...args){ send(k, args); orig(...args); };
-  });
-  window.addEventListener('error', e => send('error', [String(e.message) + " @ " + (e.filename||'') + ":" + (e.lineno||'')]));
-  window.addEventListener('unhandledrejection', e => send('error', ["Unhandled Promise rejection: " + (e.reason && e.reason.message || e.reason)]));
-})();
-<\/script>
-<script>
 try {
 ${allJS}
-} catch (e) { console.error(e); }
+} catch(e) { console.error(e); }
 <\/script>
 </body>
 </html>`;
       iframe.srcdoc = doc;
-      setStatus('Ready', true);
     }
 
-    // Controls
+    // Buttons
     byId('runBtn').addEventListener('click', run);
-    window.addEventListener('keydown', (e) => {
-      const mod = e.ctrlKey || e.metaKey;
-      if (mod && e.key === 'Enter') { e.preventDefault(); run(); }
-    });
-
-    // Console full-hide toggle (preview takes 100%)
-    const rightSplits = byId('rightSplits');
-    let consoleVisible = true;
-    byId('toggleConsole').addEventListener('click', () => {
-      consoleVisible = !consoleVisible;
-      rightSplits.classList.toggle('full-preview', !consoleVisible);
-    });
-
-    // Theme toggle
-    function applyTheme(th) {
-      document.body.setAttribute('data-theme', th);
-      if (window.monaco && monaco.editor) monaco.editor.setTheme(th === 'dark' ? 'vs-dark' : 'vs-light');
-      project.theme = th; saveProject();
-    }
     byId('themeToggle').addEventListener('click', () => {
-      const th = (document.body.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
-      applyTheme(th);
+      const th = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', th);
+      monaco.editor.setTheme(th === 'dark' ? 'vs-dark' : 'vs-light');
+      project.theme = th;
     });
-    applyTheme(project.theme || 'dark');
-
-    // Auto-run toggle
-    byId('autoRun').addEventListener('change', () => { if (byId('autoRun').checked) run(); });
-
-    // Reset project
     byId('resetBtn').addEventListener('click', () => {
-      if (!confirm('Reset project to starter files?')) return;
-      project = defaultProject();
-      Object.keys(models).forEach(n => { models[n].dispose(); delete models[n]; });
+      if (!confirm('Reset project?')) return;
+      project = { name:'My Project', files:{'index.html':'<h1>Hello</h1>'}, active:'index.html', theme:project.theme };
+      Object.values(models).forEach(m => m.dispose());
+      models = {};
       Object.keys(project.files).forEach(ensureModel);
-      editor.setModel(models[project.active]);
-      saveProject(); refreshFilesUI(); applyTheme(project.theme); run();
+      openFile(project.active);
+      run();
+    });
+    byId('sidebarToggle').addEventListener('click', () => {
+      if (window.matchMedia('(max-width:900px)').matches) {
+        byId('sidebar').classList.toggle('show');
+      } else {
+        byId('sidebar').classList.toggle('hidden');
+      }
     });
 
-    // Smooth resizing with requestAnimationFrame
+    // Smooth resizing
     (function initSplitters(){
       const splitLeft = byId('splitLeft');
       const splitRight = byId('splitRight');
-      const editorPane = byId('editorPane');
+      const sidebar = byId('sidebar');
       const rightPane = document.querySelector('.right-pane');
-      const rightSplitH = byId('splitH');
-
       let dragV = null, frame = null, target = 0;
+
       const onMoveV = (e, side) => {
-        const total = document.body.clientWidth;
         if (side === 'left') {
-          target = Math.min(Math.max(e.clientX, 140), total - 320);
+          target = Math.min(Math.max(e.clientX, 140), window.innerWidth - 300);
           if (!frame) frame = requestAnimationFrame(() => {
             frame = null;
-            document.querySelector('.sidebar').style.width = target + 'px';
+            sidebar.style.width = target + 'px';
           });
         } else {
           const rect = document.querySelector('.center').getBoundingClientRect();
-          target = Math.min(Math.max(e.clientX - rect.left, 320), rect.width - 220);
+          target = Math.min(Math.max(e.clientX - rect.left, 300), rect.width - 200);
           if (!frame) frame = requestAnimationFrame(() => {
             frame = null;
             rightPane.style.width = (document.querySelector('.center').clientWidth - target) + 'px';
           });
         }
       };
-      splitLeft.addEventListener('mousedown', () => { dragV='left'; });
-      splitRight.addEventListener('mousedown', () => { dragV='right'; });
-      window.addEventListener('mousemove', (e) => { if (dragV) onMoveV(e, dragV); if (window.editor) editor.layout(); });
-      window.addEventListener('mouseup', () => { dragV=null; });
 
-      // Console height
-      let dragH = false, frameH = null, targetH = 0;
-      rightSplitH.addEventListener('mousedown', () => dragH=true);
-      window.addEventListener('mousemove', (e) => {
-        if (!dragH) return;
-        const rect = rightSplits.getBoundingClientRect();
-        targetH = Math.min(Math.max(e.clientY - rect.top, 140), rect.height - 100);
-        if (!frameH) frameH = requestAnimationFrame(() => {
-          frameH = null;
-          const topPct = (targetH / rect.height) * 100;
-          rightSplits.style.gridTemplateRows = topPct + '% 6px ' + (100 - topPct) + '%';
-        });
-      });
-      window.addEventListener('mouseup', () => dragH=false);
+      splitLeft.addEventListener('mousedown', () => dragV = 'left');
+      splitRight.addEventListener('mousedown', () => dragV = 'right');
+      window.addEventListener('mousemove', e => { if (dragV) onMoveV(e, dragV); if (editor) editor.layout(); });
+      window.addEventListener('mouseup', () => dragV = null);
     })();
 
-    // Run once on load if autorun is checked
-    if (byId('autoRun').checked) run();
+    // Initial run
+    run();
   </script>
 </body>
 </html>
