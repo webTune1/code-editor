@@ -1,136 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Web Studio — Code + Preview</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    :root {
-      --bg: #0f1115;
-      --bg2: #0b0d11;
-      --panel: #151922;
-      --panel2: #0f141c;
-      --accent: #3b82f6;
-      --text: #e5e7eb;
-      --muted: #8b95a7;
-      --border: #232a36;
-      --success: #22c55e;
-      --danger: #ef4444;
-      --warn: #f59e0b;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    .topbar {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, #0f141c 0%, #0c1118 100%);
-      position: sticky; top: 0; z-index: 10;
-    }
-    .brand { font-weight: 700; letter-spacing: .3px; color: #eaf2ff; }
-    .toolbar { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-    button, .toggle {
-      background: var(--panel); color: var(--text); border: 1px solid var(--border);
-      padding: 8px 12px; border-radius: 8px; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px;
-    }
-    button:hover { border-color: #2c3544; background: #171d27; }
-    .toggle input { margin-right: 6px; }
-    .tabs {
-      display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--panel2);
-    }
-    .tab {
-      padding: 6px 10px; border-radius: 8px; cursor: pointer; color: var(--muted);
-      border: 1px solid transparent;
-    }
-    .tab.active {
-      color: var(--text); background: #1a2230; border-color: #2a3344;
-    }
-    .workbench {
-      position: absolute; top: 58px; bottom: 0; left: 0; right: 0; display: grid;
-      grid-template-columns: 1fr 1fr; gap: 0; min-height: 0;
-    }
-    .pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
-    .editor-pane { background: var(--panel2); border-right: 1px solid var(--border); }
-    .preview-pane { background: var(--panel2); }
-    .splitter-v {
-      width: 6px; cursor: col-resize; background: #10151d; border-left: 1px solid var(--border); border-right: 1px solid var(--border);
-    }
-    .subsplit {
-      display: grid; grid-template-rows: 1fr 180px; min-height: 0;
-    }
-    .splitter-h {
-      height: 6px; cursor: row-resize; background: #10151d; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    }
-    .section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--panel);
-    }
-    .section-header .title { color: var(--muted); font-weight: 600; }
-    #preview {
-      width: 100%; height: 100%; border: 0; background: #0b0e14;
-    }
-    #console {
-      padding: 8px 10px; overflow: auto; background: #0b0e14; color: #cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      white-space: pre-wrap;
-    }
-    .log { color: #cbd5e1; }
-    .warn { color: var(--warn); }
-    .error { color: var(--danger); }
-    .info { color: #60a5fa; }
-    .chip { font-size: 12px; padding: 2px 6px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); }
-    .status { display: inline-flex; align-items: center; gap: 6px; }
-    .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
-    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #0b0e14; border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; color: #aab4c3; }
-    @media (max-width: 900px) {
-      .workbench { grid-template-columns: 1fr; grid-template-rows: 52% 6px 48%; }
-      .splitter-v { display: none; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Web Studio Pro — Single File</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root {
+    --bg: #0f1115; --bg2:#0c1118; --panel:#151922; --panel2:#0f141c;
+    --accent:#3b82f6; --text:#e5e7eb; --muted:#94a3b8; --border:#232a36;
+    --success:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+  }
+  [data-theme="light"] {
+    --bg:#f6f7fb; --bg2:#ffffff; --panel:#ffffff; --panel2:#f6f8fc;
+    --accent:#2563eb; --text:#0f172a; --muted:#475569; --border:#e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+  }
+  .topbar {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    background: linear-gradient(180deg, var(--panel2), var(--bg));
+    position:sticky; top:0; z-index:10;
+  }
+  .brand { font-weight:700; letter-spacing:.2px; }
+  .toolbar { margin-left:auto; display:flex; gap:8px; flex-wrap: wrap; }
+  button, .toggle, .inputlike {
+    background:var(--panel); color:var(--text); border:1px solid var(--border);
+    padding:7px 10px; border-radius:8px; cursor:pointer; user-select:none;
+  }
+  button:hover { border-color:#2c3544; background:rgba(59,130,246,0.08); }
+  .toggle { display:inline-flex; align-items:center; gap:6px; }
+  .status { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--success); display:inline-block; }
+  .layout {
+    position:absolute; top:52px; bottom:0; left:0; right:0; display:grid;
+    grid-template-columns: 260px 6px 1fr 6px 1fr; min-height:0;
+  }
+  .pane { min-width:0; min-height:0; display:flex; flex-direction:column; }
+  .sidebar { background:var(--panel2); border-right:1px solid var(--border); }
+  .editor { background:var(--panel2); }
+  .preview { background:var(--panel2); }
+  .splitter-v, .splitter-h {
+    background:var(--bg2); border-left:1px solid var(--border); border-right:1px solid var(--border);
+  }
+  .splitter-v { width:6px; cursor:col-resize; }
+  .splitter-h { height:6px; cursor:row-resize; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .section-header {
+    display:flex; align-items:center; justify-content:space-between; padding:8px 10px;
+    border-bottom:1px solid var(--border); background:var(--panel);
+  }
+  .title { font-weight:600; color:var(--muted); }
+  .filebar { padding:8px; display:flex; gap:6px; border-bottom:1px solid var(--border); }
+  .files { flex:1; overflow:auto; padding:6px; }
+  .file { padding:6px 8px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .file.active { background: rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.35); }
+  .file .name { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .file .ext { color:var(--muted); font-size:12px; }
+  #editor { width:100%; height:100%; }
+  .right { display:grid; grid-template-rows: 1fr 6px 240px; min-height:0; }
+  #preview { width:100%; height:100%; border:0; background:var(--bg); }
+  #console { padding:8px 10px; overflow:auto; background:var(--bg); color:#cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space:pre-wrap; }
+  [data-theme="light"] #console { color:#0f172a; }
+  .log { color:#cbd5e1; } .warn { color:var(--warn); } .error { color:var(--danger); } .info { color:#60a5fa; }
+  .hidden { display:none !important; }
+  .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:var(--bg2); border:1px solid var(--border); padding:1px 6px; border-radius:6px; color:var(--muted); }
+  .badge { font-size:12px; padding:2px 6px; border:1px solid var(--border); border-radius:999px; color:var(--muted); }
+  .inputlike { display:inline-flex; align-items:center; gap:6px; }
+  #projName { outline:none; padding:0 4px; border-radius:4px; }
+  @media (max-width: 1024px) {
+    .layout { grid-template-columns: 0 0 1fr 6px 1fr; }
+  }
+</style>
 </head>
-<body>
+<body data-theme="dark">
   <div class="topbar">
-    <div class="brand">Web Studio</div>
-    <div class="chip">HTML • CSS • JS</div>
+    <div class="brand">Web Studio Pro</div>
+    <div class="inputlike">Project: <span id="projName" contenteditable="true">My Project</span></div>
     <div class="toolbar">
       <button id="runBtn" title="Run (Ctrl/⌘ + Enter)">▶ Run</button>
       <label class="toggle"><input type="checkbox" id="autoRun" checked /> Auto‑run</label>
+      <button id="toggleConsole" title="Show/Hide Console">🪵 Console</button>
+      <button id="themeToggle" title="Light/Dark">🌞/🌙</button>
       <button id="resetBtn" title="Reset to starter">↺ Reset</button>
-      <span class="status"><span class="dot" id="statusDot"></span> <span id="statusText">Ready</span></span>
+      <span class="status"><span class="dot" id="statusDot"></span><span id="statusText">Ready</span></span>
     </div>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" data-lang="html">index.html</div>
-    <div class="tab" data-lang="css">styles.css</div>
-    <div class="tab" data-lang="js">script.js</div>
-    <span style="margin-left:auto;color:#8b95a7">Run: <span class="kbd">Ctrl/⌘</span> + <span class="kbd">Enter</span></span>
-  </div>
-
-  <div class="workbench" id="workbench">
-    <div class="pane editor-pane">
-      <div id="editor" style="width:100%;height:100%"></div>
+  <div class="layout" id="layout">
+    <!-- Sidebar: files -->
+    <div class="pane sidebar">
+      <div class="section-header">
+        <div class="title">Files</div>
+        <div class="badge" id="storageInfo">autosaved</div>
+      </div>
+      <div class="filebar">
+        <button id="addFile" title="New file">＋</button>
+        <button id="renameFile" title="Rename">✎</button>
+        <button id="deleteFile" title="Delete">🗑</button>
+        <button id="exportProj" title="Export project as .zip-like HTML">⬇ Export</button>
+      </div>
+      <div class="files" id="fileList"></div>
     </div>
-    <div class="splitter-v" id="splitV"></div>
-    <div class="pane preview-pane">
-      <div class="subsplit">
+
+    <div class="splitter-v" id="splitLeft"></div>
+
+    <!-- Editor -->
+    <div class="pane editor">
+      <div class="section-header">
+        <div class="title">Editor</div>
+        <div>Run: <span class="kbd">Ctrl/⌘</span> + <span class="kbd">Enter</span></div>
+      </div>
+      <div id="editor"></div>
+    </div>
+
+    <div class="splitter-v" id="splitRight"></div>
+
+    <!-- Right: preview + console -->
+    <div class="pane preview">
+      <div class="right" id="rightGrid">
         <div>
           <div class="section-header">
             <div class="title">Preview</div>
-            <div class="chip">sandboxed</div>
+            <div class="badge">sandboxed</div>
           </div>
           <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
         <div class="splitter-h" id="splitH"></div>
-        <div>
+        <div id="consoleWrap">
           <div class="section-header">
             <div class="title">Console</div>
-            <div>
-              <button id="clearConsole">Clear</button>
-            </div>
+            <div><button id="clearConsole">Clear</button></div>
           </div>
           <div id="console">Console output will appear here…</div>
         </div>
@@ -138,171 +141,299 @@
     </div>
   </div>
 
-  <!-- Monaco loader from CDN -->
+  <!-- Monaco Editor (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs/loader.min.js"></script>
+  <!-- Pyodide loader (lazy) -->
   <script>
-    // Layout: vertical and horizontal splitters
-    const workbench = document.getElementById('workbench');
-    const editorPane = document.querySelector('.editor-pane');
-    const previewPane = document.querySelector('.preview-pane');
-    const splitV = document.getElementById('splitV');
-    const splitH = document.getElementById('splitH');
-    const subsplit = document.querySelector('.subsplit');
+    let pyodideReady = null;
+    async function ensurePyodide() {
+      if (!pyodideReady) {
+        const s = document.createElement('script');
+        s.src = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
+        document.head.appendChild(s);
+        pyodideReady = new Promise((resolve) => {
+          s.onload = async () => {
+            const py = await loadPyodide();
+            resolve(py);
+          };
+        });
+      }
+      return pyodideReady;
+    }
+  </script>
 
-    function initVSplit() {
-      let dragging = false;
-      splitV.addEventListener('mousedown', () => dragging = true);
+  <script>
+    // ---- Utilities
+    const q = sel => document.querySelector(sel);
+    const byId = id => document.getElementById(id);
+    const statusDot = byId('statusDot');
+    const statusText = byId('statusText');
+    const setStatus = (txt, ok = true) => { statusDot.style.background = ok ? 'var(--success)' : 'var(--danger)'; statusText.textContent = txt; };
+    const extOf = name => (name.split('.').pop() || '').toLowerCase();
+    const langOfExt = (ext) => ({
+      html:'html', htm:'html',
+      css:'css', scss:'scss', less:'less',
+      js:'javascript', mjs:'javascript', cjs:'javascript', ts:'typescript',
+      json:'json', md:'markdown', markdown:'markdown', yml:'yaml', yaml:'yaml',
+      xml:'xml', svg:'xml',
+      py:'python',
+      c:'c', h:'c', cpp:'cpp', cxx:'cpp', hpp:'cpp',
+      sh:'shell', bash:'shell', sql:'sql', toml:'toml', ini:'ini', txt:'plaintext'
+    }[ext] || 'plaintext');
+
+    // ---- Layout splitters
+    (function initSplitters(){
+      const layout = byId('layout');
+      const splitLeft = byId('splitLeft');
+      const splitRight = byId('splitRight');
+      const splitH = byId('splitH');
+      const rightGrid = byId('rightGrid');
+      let dragV = null, dragH = null;
+
+      splitLeft.addEventListener('mousedown', () => dragV = 'left');
+      splitRight.addEventListener('mousedown', () => dragV = 'right');
       window.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const total = workbench.clientWidth;
-        const left = Math.min(Math.max(e.clientX, 180), total - 180);
-        const leftPct = (left / total) * 100;
-        workbench.style.gridTemplateColumns = leftPct + '% 6px ' + (100 - leftPct) + '%';
+        if (!dragV) return;
+        const total = layout.clientWidth;
+        if (dragV === 'left') {
+          const x = Math.min(Math.max(e.clientX, 140), total - 300);
+          const leftPct = (x / total) * 100;
+          layout.style.gridTemplateColumns = leftPct + '% 6px 1fr 6px 1fr';
+        } else {
+          const rect = layout.getBoundingClientRect();
+          const x = Math.min(Math.max(e.clientX - rect.left, 300), rect.width - 140);
+          const rightPct = ((rect.width - x) / rect.width) * 100;
+          layout.style.gridTemplateColumns = '260px 6px ' + (100 - rightPct - 260*100/rect.width) + '% 6px ' + rightPct + '%';
+        }
         if (window.editor) editor.layout();
       });
-      window.addEventListener('mouseup', () => dragging = false);
-    }
-    function initHSplit() {
-      let dragging = false;
-      splitH.addEventListener('mousedown', () => dragging = true);
-      window.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const rect = previewPane.getBoundingClientRect();
-        const y = Math.min(Math.max(e.clientY - rect.top, 120), rect.height - 120);
-        const topPct = (y / rect.height) * 100;
-        subsplit.style.gridTemplateRows = topPct + '% 6px ' + (100 - topPct) + '%';
-      });
-      window.addEventListener('mouseup', () => dragging = false);
-    }
-    initVSplit(); initHSplit();
+      window.addEventListener('mouseup', () => dragV = null);
 
-    // Starter code and persistence
-    const defaultHTML = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Hello Web Studio</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-  </head>
-  <body>
-    <h1>Hello 👋</h1>
-    <p>Edit HTML, CSS, and JS — see it live on the right.</p>
-    <button id="btn">Click me</button>
-  </body>
-</html>`;
-    const defaultCSS = `body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 24px; }
+      splitH.addEventListener('mousedown', () => dragH = true);
+      window.addEventListener('mousemove', (e) => {
+        if (!dragH) return;
+        const rect = rightGrid.getBoundingClientRect();
+        const y = Math.min(Math.max(e.clientY - rect.top, 140), rect.height - 100);
+        const topPct = (y / rect.height) * 100;
+        rightGrid.style.gridTemplateRows = topPct + '% 6px ' + (100 - topPct) + '%';
+      });
+      window.addEventListener('mouseup', () => dragH = null);
+    })();
+
+    // ---- State (localStorage)
+    const LS_KEY = 'wsp_project_v1';
+    function defaultProject() {
+      return {
+        name: 'My Project',
+        files: {
+          'index.html': `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web Studio Pro</title>
+</head>
+<body>
+  <h1>Hello 👋</h1>
+  <p>Edit HTML, CSS, JS — click Run or enable Auto‑run.</p>
+  <button id="btn">Click me</button>
+</body>
+</html>`,
+          'styles.css': `body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 24px; }
 h1 { color: #3b82f6; }
 button { padding: 10px 16px; border-radius: 8px; border: none; background:#1f2937; color: #e5e7eb; }
-button:hover { background:#111827; }`;
-    const defaultJS = `console.log("Welcome to Web Studio!");
+button:hover { background:#111827; }`,
+          'script.js': `console.log("Welcome to Web Studio!");
 const btn = document.getElementById("btn");
 btn?.addEventListener("click", () => {
   console.log("Clicked!");
   alert("Button clicked 🎉");
-});`;
-
-    function loadState() {
-      return {
-        html: localStorage.getItem('ws_html') ?? defaultHTML,
-        css: localStorage.getItem('ws_css') ?? defaultCSS,
-        js: localStorage.getItem('ws_js') ?? defaultJS
+});`
+        },
+        active: 'index.html',
+        theme: 'dark'
       };
     }
-    function saveState({html, css, js}) {
-      localStorage.setItem('ws_html', html);
-      localStorage.setItem('ws_css', css);
-      localStorage.setItem('ws_js', js);
+    function loadProject() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return defaultProject();
+        const data = JSON.parse(raw);
+        if (!data.files || Object.keys(data.files).length === 0) return defaultProject();
+        return data;
+      } catch { return defaultProject(); }
+    }
+    function saveProject() {
+      localStorage.setItem(LS_KEY, JSON.stringify(project));
+      byId('storageInfo').textContent = 'saved';
+      setTimeout(()=> byId('storageInfo').textContent = 'autosaved', 800);
     }
 
-    // Monaco setup
-    let editor, models = {};
-    const tabs = document.querySelectorAll('.tab');
+    let project = loadProject();
 
+    // ---- Monaco setup
+    let editor, models = {};
+    const fileList = byId('fileList');
+
+    function refreshFilesUI() {
+      fileList.innerHTML = '';
+      Object.keys(project.files).forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'file' + (project.active === name ? ' active' : '');
+        const ext = extOf(name);
+        item.innerHTML = `<span class="name">${name}</span><span class="ext">${ext}</span>`;
+        item.addEventListener('click', () => openFile(name));
+        fileList.appendChild(item);
+      });
+      byId('projName').textContent = project.name;
+    }
+
+    function openFile(name) {
+      project.active = name;
+      const model = ensureModel(name);
+      editor.setModel(model);
+      refreshFilesUI();
+    }
+
+    function ensureModel(name) {
+      if (models[name]) return models[name];
+      const value = project.files[name] ?? '';
+      const lang = langOfExt(extOf(name));
+      const uri = monaco.Uri.parse('inmemory:///' + name);
+      const model = monaco.editor.createModel(value, lang, uri);
+      models[name] = model;
+      model.onDidChangeContent(debounced(() => {
+        project.files[name] = model.getValue();
+        saveProject();
+        if (byId('autoRun').checked) run();
+      }, 400));
+      return model;
+    }
+
+    function removeModel(name) {
+      if (models[name]) {
+        models[name].dispose();
+        delete models[name];
+      }
+    }
+
+    // Debounce helper
+    function debounced(fn, ms = 300) { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
+
+    // Load Monaco
     window.require.config({
       paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs' }
     });
-
     window.require(['vs/editor/editor.main'], function () {
-      const state = loadState();
-      models.html = monaco.editor.createModel(state.html, 'html', monaco.Uri.parse('inmemory://model/index.html'));
-      models.css  = monaco.editor.createModel(state.css,  'css',  monaco.Uri.parse('inmemory://model/styles.css'));
-      models.js   = monaco.editor.createModel(state.js,   'javascript', monaco.Uri.parse('inmemory://model/script.js'));
+      // Create models for existing files
+      Object.keys(project.files).forEach(ensureModel);
 
-      editor = monaco.editor.create(document.getElementById('editor'), {
-        model: models.html,
-        theme: 'vs-dark',
+      editor = monaco.editor.create(byId('editor'), {
+        model: models[project.active] || ensureModel(project.active),
+        theme: project.theme === 'dark' ? 'vs-dark' : 'vs-light',
         fontSize: 14,
         minimap: { enabled: true },
         automaticLayout: true,
         wordWrap: 'on',
         smoothScrolling: true,
-        scrollBeyondLastLine: false
+        scrollBeyondLastLine: false,
+        autoClosingBrackets: 'always',
+        autoClosingQuotes: 'always'
       });
 
-      tabs.forEach(tab => tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const lang = tab.dataset.lang;
-        editor.setModel(models[lang]);
-      }));
+      // Auto-close HTML tags
+      monaco.languages.html.htmlDefaults.setOptions({ autoClosingTags: true });
 
-      // Autosave + autorun
-      const debounced = (fn, ms = 400) => {
-        let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-      };
-      const handleChange = debounced(() => {
-        const current = {
-          html: models.html.getValue(),
-          css: models.css.getValue(),
-          js: models.js.getValue()
-        };
-        saveState(current);
-        if (document.getElementById('autoRun').checked) run(current);
-      }, 400);
+      // Emmet-like: "!" + Tab => HTML boilerplate (only if line is exactly "!")
+      editor.addCommand(monaco.KeyCode.Tab, () => {
+        const model = editor.getModel();
+        const lang = model.getLanguageId();
+        if (lang !== 'html') return false;
+        const pos = editor.getPosition();
+        const line = model.getLineContent(pos.lineNumber);
+        if (line.trim() !== '!') return false;
+        const range = new monaco.Range(pos.lineNumber, 1, pos.lineNumber, line.length + 1);
+        model.pushEditOperations([], [{
+          range, text: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Document</title>
+</head>
+<body>
 
-      Object.values(models).forEach(m => m.onDidChangeContent(handleChange));
+</body>
+</html>`}], () => null);
+        return true;
+      });
 
+      // Tabs/list
+      refreshFilesUI();
       // First run
-      run(state);
+      run();
     });
 
-    // Build preview document and wire console
-    const iframe = document.getElementById('preview');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    const consoleEl = document.getElementById('console');
+    // ---- Console
+    const consoleEl = byId('console');
+    function clearConsole(){ consoleEl.textContent = ''; }
+    byId('clearConsole').addEventListener('click', clearConsole);
 
-    function setStatus(text, ok = true) {
-      statusDot.style.background = ok ? 'var(--success)' : 'var(--danger)';
-      statusText.textContent = text;
+    function appendLog(type, payload) {
+      const line = document.createElement('div');
+      line.className = type === 'error' ? 'error' : type === 'warn' ? 'warn' : type === 'info' ? 'info' : 'log';
+      let text = payload;
+      if (payload && typeof payload === 'object') {
+        if (payload.__error) text = `${payload.name}: ${payload.message}\n${payload.stack||''}`;
+        else { try { text = JSON.stringify(payload, null, 2); } catch { text = String(payload); } }
+      }
+      line.textContent = `[${type}] ${text}`;
+      consoleEl.appendChild(line);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
-    function run(src) {
+    // Receive console messages from preview
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.__ws_console) {
+        data.args.forEach(a => appendLog(data.type, a));
+      }
+    });
+
+    // ---- Preview / Run
+    const iframe = byId('preview');
+    async function run() {
       setStatus('Running…', true);
-      const { html, css, js } = src;
+      clearConsole();
+
+      const files = project.files;
+      const htmlEntry = Object.keys(files).find(n => n.toLowerCase().endsWith('.html')) || 'index.html';
+      const allCSS = Object.keys(files).filter(n => n.toLowerCase().endsWith('.css')).map(n=>files[n]).join('\n\n');
+      const allJS = Object.keys(files).filter(n => n.toLowerCase().endsWith('.js')).map(n=>files[n]).join('\n;\n');
+      const htmlBody = files[htmlEntry] || '<!doctype html><html><body><p>No HTML file found.</p></body></html>';
+
+      // Build preview document
       const doc = `
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>${css}</style>
+<style>${allCSS}</style>
 </head>
 <body>
-${html}
+${htmlBody}
 <script>
 (function(){
-  // Forward console to parent
   const send = (type, args) => {
-    try { parent.postMessage({ __ws_console: true, type, args: args.map(a => serialize(a)) }, '*'); } catch(e){}
+    try { parent.postMessage({ __ws_console:true, type, args: args.map(a => serialize(a)) }, '*'); } catch(e){}
   };
   function serialize(v){
     try {
-      if (v instanceof Error) return { __error: true, name: v.name, message: v.message, stack: v.stack };
+      if (v instanceof Error) return { __error:true, name:v.name, message:v.message, stack:v.stack };
       return JSON.parse(JSON.stringify(v));
-    } catch {
-      return String(v);
-    }
+    } catch { return String(v); }
   }
   ['log','warn','error','info'].forEach(k => {
     const orig = console[k].bind(console);
@@ -318,63 +449,150 @@ ${html}
 <\/script>
 <script>
 try {
-${js}
+${allJS}
 } catch (e) {
   console.error(e);
 }
 <\/script>
 </body>
 </html>`;
+
+      // If active file is Python, run via Pyodide (console only)
+      const activeExt = extOf(project.active);
+      if (activeExt === 'py') {
+        try {
+          appendLog('info', 'Loading Python runtime (Pyodide)…');
+          const py = await ensurePyodide();
+          // Capture stdout
+          let out = '';
+          py.setStdout({ batched: (s)=> { out += s; } });
+          py.setStderr({ batched: (s)=> { out += s; } });
+          await py.runPythonAsync(project.files[project.active] || '');
+          if (out.trim()) appendLog('log', out);
+          setStatus('Ready', true);
+        } catch (e) {
+          appendLog('error', String(e));
+          setStatus('Error', false);
+        }
+      }
+
+      // Always update preview for web stack
       iframe.srcdoc = doc;
-      clearConsole();
       setStatus('Ready', true);
     }
 
-    // Receive console messages
-    window.addEventListener('message', (e) => {
-      const data = e.data;
-      if (!data || !data.__ws_console) return;
-      data.args.forEach(a => appendLog(data.type, a));
-    });
-
-    function appendLog(type, payload) {
-      const line = document.createElement('div');
-      line.className = type === 'error' ? 'error' : type === 'warn' ? 'warn' : type === 'info' ? 'info' : 'log';
-      let text = payload;
-      if (payload && typeof payload === 'object') {
-        if (payload.__error) text = `${payload.name}: ${payload.message}\n${payload.stack||''}`;
-        else text = JSON.stringify(payload, null, 2);
-      }
-      line.textContent = `[${type}] ${text}`;
-      consoleEl.appendChild(line);
-      consoleEl.scrollTop = consoleEl.scrollHeight;
-    }
-    function clearConsole(){ consoleEl.textContent = ''; }
-    document.getElementById('clearConsole').addEventListener('click', clearConsole);
-
-    // Controls
-    document.getElementById('runBtn').addEventListener('click', () => {
-      const current = {
-        html: models.html.getValue(),
-        css: models.css.getValue(),
-        js: models.js.getValue()
-      };
-      run(current);
-    });
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      if (!confirm('Reset to starter template?')) return;
-      models.html.setValue(defaultHTML);
-      models.css.setValue(defaultCSS);
-      models.js.setValue(defaultJS);
-    });
-    // Keyboard: Ctrl/Cmd + Enter
+    // ---- Controls
+    byId('runBtn').addEventListener('click', run);
     window.addEventListener('keydown', (e) => {
       const mod = e.ctrlKey || e.metaKey;
-      if (mod && e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('runBtn').click();
-      }
+      if (mod && e.key === 'Enter') { e.preventDefault(); run(); }
     });
+
+    // Console toggle
+    const consoleWrap = byId('consoleWrap');
+    const rightGrid = byId('rightGrid');
+    let consoleVisible = true;
+    byId('toggleConsole').addEventListener('click', () => {
+      consoleVisible = !consoleVisible;
+      consoleWrap.classList.toggle('hidden', !consoleVisible);
+      rightGrid.style.gridTemplateRows = consoleVisible ? '1fr 6px 240px' : '1fr 6px 0';
+    });
+
+    // Theme toggle
+    const themeToggle = byId('themeToggle');
+    function applyTheme(th) {
+      document.body.setAttribute('data-theme', th);
+      if (window.monaco && monaco.editor) monaco.editor.setTheme(th === 'dark' ? 'vs-dark' : 'vs-light');
+      project.theme = th; saveProject();
+    }
+    themeToggle.addEventListener('click', () => {
+      const th = (document.body.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
+      applyTheme(th);
+    });
+    applyTheme(project.theme || 'dark');
+
+    // Project name
+    byId('projName').addEventListener('input', debounced(() => { project.name = byId('projName').textContent.trim() || 'My Project'; saveProject(); }, 400));
+
+    // File operations
+    byId('addFile').addEventListener('click', () => {
+      const name = prompt('New file name (e.g., new.html, app.js, styles.css, main.py):', 'untitled.txt');
+      if (!name) return;
+      if (project.files[name]) { alert('A file with that name already exists.'); return; }
+      project.files[name] = '';
+      saveProject();
+      ensureModel(name);
+      openFile(name);
+    });
+
+    byId('renameFile').addEventListener('click', () => {
+      const cur = project.active;
+      if (!cur) return;
+      const name = prompt('Rename file to:', cur);
+      if (!name || name === cur) return;
+      if (project.files[name]) { alert('A file with that name already exists.'); return; }
+      project.files[name] = project.files[cur];
+      delete project.files[cur];
+      const model = models[cur];
+      if (model) {
+        const newModel = monaco.editor.createModel(model.getValue(), langOfExt(extOf(name)), monaco.Uri.parse('inmemory:///' + name));
+        newModel.onDidChangeContent(debounced(() => {
+          project.files[name] = newModel.getValue();
+          saveProject();
+          if (byId('autoRun').checked) run();
+        }, 400));
+        editor.setModel(newModel);
+        models[name] = newModel;
+        removeModel(cur);
+      }
+      project.active = name;
+      saveProject();
+      refreshFilesUI();
+    });
+
+    byId('deleteFile').addEventListener('click', () => {
+      const cur = project.active;
+      if (!cur) return;
+      if (!confirm('Delete ' + cur + '?')) return;
+      delete project.files[cur];
+      removeModel(cur);
+      // pick another active file
+      const names = Object.keys(project.files);
+      const next = names[0] || null;
+      project.active = next;
+      if (next) editor.setModel(ensureModel(next));
+      saveProject();
+      refreshFilesUI();
+      run();
+    });
+
+    // Reset project
+    byId('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset project to starter files?')) return;
+      project = defaultProject();
+      // dispose old models
+      Object.keys(models).forEach(n => removeModel(n));
+      models = {};
+      Object.keys(project.files).forEach(ensureModel);
+      editor.setModel(models[project.active]);
+      saveProject();
+      refreshFilesUI();
+      applyTheme(project.theme);
+      run();
+    });
+
+    // Export project: creates a single HTML to download current preview environment
+    byId('exportProj').addEventListener('click', () => {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = (project.name || 'project') + '.wsp.json';
+      a.click();
+    });
+
+    // Auto-run checkbox
+    byId('autoRun').addEventListener('change', () => { if (byId('autoRun').checked) run(); });
+
   </script>
 </body>
 </html>
